@@ -36,6 +36,7 @@ import EquipmentMgmt from "pages/master/EquipmentMgmt";
 import EquipmentCheckMgmt from "pages/master/EquipmentCheckMgmt";
 import RouterMgmt from "pages/master/RouterMgmt";
 import BomMgmt from "pages/master/BomMgmt";
+import CodeMgmt from "pages/master/CodeMgmt";
 
 // 자재관리
 import OrderMgmt from "pages/material/OrderMgmt"; 
@@ -169,6 +170,8 @@ function Main() {
         return <RouterMgmt />;
       case "BomMgmt":
         return <BomMgmt />;
+      case "CodeMgmt":
+        return <CodeMgmt />;
 
       // 자재관리
       case "OrderMgmt":
