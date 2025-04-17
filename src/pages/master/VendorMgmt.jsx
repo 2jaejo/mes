@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Form, Button, Table } from 'react-bootstrap';
 
 import axiosInstance from "utils/Axios";
@@ -9,24 +9,49 @@ import Modal from "components/Modal";
 const Main = () => {
   const modalRef = useRef();  
   const modalRef2 = useRef();  
-
+  
   const [loading, setLoading] = useState(false);
+  
+  // 거래처유형
+  const [optClientType, setOptClientType] = useState(null);
+  const optClientTypeRef = useRef([]);  
 
-  // 대분류 그리드 레퍼
+
+  useEffect(()=>{
+    console.log("useEffect");
+
+    
+    axiosInstance
+    .post(`/api/getCodeDet`, JSON.stringify({group_code:'cd001'}))
+    .then((res) => {
+        setOptClientType(res.data);  
+        optClientTypeRef.current = res.data;
+        getData();
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
+      });  
+      
+    
+  },[]);
+
+
+  // 그리드 레퍼
   const gridRef = useRef();  
 
-  // 소분류 그리드 래퍼
-  const gridRef2 = useRef();
+  const typeFormatter = (params) => {
+    const item = optClientTypeRef.current.find(el => el.code === params.value);
+    // 못 찾으면 원래 코드 출력
+    return item ? item.code_name : params.value; 
+  };
 
-  // 대분류 행 선택값
-  const [selectedRow, setSelectedRow] = useState(0); 
-    
-  // 대분류 그리드 설정
+  // 그리드 설정
   const [rowData, setRowData] = useState();
   const [columnDefs] = useState([
     { headerName: "거래처코드", field: "client_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "거래처명", field: "client_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
-    { headerName: "거래처유형", field: "client_type", sortable: true, editable: true, align:"center"},
+    { headerName: "거래처유형", field: "client_type", sortable: true, editable: true, align:"center", valueFormatter: typeFormatter},
     { headerName: "사업자등록번호", field: "business_no", sortable: true, editable: true, align:"center"},
     { headerName: "업태", field: "business_type", sortable: true, editable: true, align:"center"},
     { headerName: "업종", field: "business_item", sortable: true, editable: true, align:"center"},
@@ -34,7 +59,7 @@ const Main = () => {
     { headerName: "담당자", field: "contact_name", sortable: true, editable: true, align:"left"},
     { headerName: "연락처", field: "contact_phone", sortable: true, editable: true, align:"center"},
     { headerName: "팩스", field: "contact_fax", sortable: true, editable: true, align:"center"},
-    { headerName: "이메일", field: "contact_emali", sortable: true, editable: true, align:"center"},
+    { headerName: "이메일", field: "contact_email", sortable: true, editable: true, align:"center"},
     { 
       headerName: "사용여부", 
       field: "use_yn", 
@@ -48,12 +73,12 @@ const Main = () => {
       },
        // Y/N 값을 true/false로 변환하여 체크박스 표시
       valueGetter: (params) => {
-        return params.data.use_yn === 'y';
+        return params.data.use_yn === 'Y';
       },
 
       // 체크박스 변경 시 true/false → Y/N 으로 반영
       valueSetter: (params) => {
-        const newValue = params.newValue ? 'y' : 'n';
+        const newValue = params.newValue ? 'Y' : 'N';
         if (params.data.use_yn !== newValue) {
           params.data.use_yn = newValue;
           return true; // 값이 바뀐 경우만 true
@@ -61,7 +86,7 @@ const Main = () => {
         return false; // 변경 없음
       },
     },
-    { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left"},
+    { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
   ]);
 
 
@@ -81,15 +106,24 @@ const Main = () => {
 
   // 추가 모달
   const DEFAULT_FORM2 = () => ({
-    category_id:'',
-    category_nm:'',
-    sort: '',
-    use_yn: '',
-    comment: '',
-    parent_id: '',
-    parent_nm: '',
+      client_code : ''
+    , client_name : ''
+    , client_type : ''
+    , business_no : ''
+    , business_type : ''
+    , business_item : ''
+    , ceo_name : ''
+    , contact_name : ''
+    , contact_phone : ''
+    , contact_fax : ''
+    , contact_email : ''
+    , address : ''
+    , use_yn : ''
+    , comment : ''
   });
+
   const formRef = useRef();
+
   const formRefChange = (name, value) => {
     formRef.current[name] = value;
   };
@@ -109,63 +143,142 @@ const Main = () => {
       <div className={"p-2"}>
         <Table bordered style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
           <tbody>
+            
             <tr>
-              <th className="bg-light text-end align-middle">대분류코드</th>
+              <th className="bg-light text-end align-middle">거래처코드</th>
               <td>
                 <Form.Control 
                   type="text"
-                  name="parent_id"
-                  value={modalForm.parent_id ?? ''}
-                  onChange={modalFormChange}
-                  size="sm" 
-                  className="w-auto"
-                  disabled
-                />
-              </td>
-              <th className="bg-light text-end align-middle">대분류명</th>
-              <td>
-                <Form.Control 
-                  type="text"
-                  name="parent_nm"
-                  value={modalForm.parent_nm ?? ''}
-                  onChange={modalFormChange}
-                  size="sm" 
-                  className="w-auto"
-                  disabled
-                />
-              </td>
-            </tr>
-            <tr>
-              <th className="bg-light text-end align-middle">소분류코드</th>
-              <td>
-                <Form.Control 
-                  type="text"
-                  name="category_id"
-                  value={modalForm.category_id ?? ''}
+                  name="client_code"
+                  value={modalForm.client_code ?? ''}
                   onChange={modalFormChange}
                   size="sm" 
                   className="w-auto"
                 />
               </td>
-              <th className="bg-light text-end align-middle">소분류명</th>
+              <th className="bg-light text-end align-middle">거래처명</th>
               <td>
                 <Form.Control 
                   type="text"
-                  name="category_nm"
-                  value={modalForm.category_nm ?? ''}
+                  name="client_name"
+                  value={modalForm.client_name ?? ''}
                   onChange={modalFormChange}
                   size="sm" 
                   className="w-auto"
                 />
               </td>
             </tr>
+           
             <tr>
-              <th className="bg-light text-end align-middle">정렬</th>
+              <th className="bg-light text-end align-middle">거래처유형</th>
+              <td>
+                <Form.Select 
+                  name="client_type" 
+                  value={modalForm.client_type} 
+                  onChange={modalFormChange}
+                  size="sm"
+                  className="w-100"
+                >
+                  {(optClientType || []).map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.code_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </td>
+              
+              <th className="bg-light text-end align-middle">사업자등록번호</th>
               <td>
                 <Form.Control 
-                  type="number"
-                  name="sort"
-                  value={modalForm.sort ?? ''}
+                  type="text"
+                  name="business_no"
+                  value={modalForm.business_no ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <th className="bg-light text-end align-middle">업태</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="business_type"
+                  value={modalForm.business_type ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+              <th className="bg-light text-end align-middle">업종</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="business_item"
+                  value={modalForm.business_item ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th className="bg-light text-end align-middle">대표자</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="ceo_name"
+                  value={modalForm.ceo_name ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+              <th className="bg-light text-end align-middle">담당자</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="contact_name"
+                  value={modalForm.contact_name ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th className="bg-light text-end align-middle">연락처</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="contact_phone"
+                  value={modalForm.contact_phone ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+              <th className="bg-light text-end align-middle">팩스</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="contact_fax"
+                  value={modalForm.contact_fax ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-auto"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th className="bg-light text-end align-middle">이메일</th>
+              <td>
+                <Form.Control 
+                  type="text"
+                  name="contact_email"
+                  value={modalForm.contact_email ?? ''}
                   onChange={modalFormChange}
                   size="sm" 
                   className="w-auto"
@@ -185,6 +298,21 @@ const Main = () => {
                 </Form.Select>
               </td>
             </tr>
+
+            <tr>
+              <th className="bg-light text-end align-middle">주소</th>
+              <td colSpan={3}>
+                <Form.Control 
+                  type="text"
+                  name="address"
+                  value={modalForm.address ?? ''}
+                  onChange={modalFormChange}
+                  size="sm" 
+                  className="w-100"
+                />
+              </td>
+            </tr>
+
             <tr>
               <th className="bg-light text-end align-middle">비고</th>
               <td colSpan={3}>
@@ -211,13 +339,14 @@ const Main = () => {
   // 조회
   const getData = (params) => {
     console.log("getData");
+    
 
-    setForm({...params});
+    const data = {...form};
+
     setLoading(true);
-
     const startTime = Date.now(); // 요청 전 시간 기록
     axiosInstance
-      .post(`/api/getCategoryDet`, JSON.stringify(params))
+      .post(`/api/getClient`, JSON.stringify(data))
       .then((res) => {
         const endTime = Date.now(); // 응답 시간을 측정
         const responseTime = endTime - startTime; // 응답 시간 (밀리초)
@@ -242,16 +371,14 @@ const Main = () => {
     console.log("setData");
 
     axiosInstance
-      .post("api/setCategory", JSON.stringify(params))
+      .post("api/setClient", JSON.stringify(params))
       .then((res) => {
-        const selectedRows = gridRef.current.getSelectedRows();
-        if( selectedRows.length > 0 ){
-          getData(selectedRows[0]);
-        };
+     
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
         modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
+        getData();
       });   
   };
 
@@ -268,7 +395,7 @@ const Main = () => {
     formRef.current["parent_nm"] = form.category_nm;
 
     modalRef.current.open({
-      title: "추가",
+      title: "거래처 추가",
       message: "추가하시겠습니까?",
       content: <ModalForm form={{parent_id:form.category_id, parent_nm:form.category_nm}} onChangeHandler={formRefChange} />,
       onCancel: ()=>{
@@ -278,22 +405,18 @@ const Main = () => {
       confirmClass:"btn btn-success",
       onConfirm: (res) => {
         
-        if(formRef.current.category_id === "" || formRef.current.category_id === undefined){
-          modalRef2.current.open({ title:"알림", message:"분류코드를 입력하세요.", cancelText:"" });
+        if(formRef.current.client_code === "" || formRef.current.client_code === undefined){
+          modalRef2.current.open({ title:"알림", message:"거래처코드를 입력하세요.", cancelText:"" });
           return;
         }
         
-        if(formRef.current.category_nm === ""){
-          modalRef2.current.open({ title:"알림", message:"분류명을 입력하세요.", cancelText:"" });
+        if(formRef.current.client_name === ""){
+          modalRef2.current.open({ title:"알림", message:"거래처명을 입력하세요.", cancelText:"" });
           return;
         }
         
-        // 소분류 아이디 조합
-        formRef.current["category_id"] = formRef.current["parent_id"] + '-' + formRef.current["category_id"];
-        console.log(formRef.current);
-
         axiosInstance
-          .post(`/api/addCategory`, JSON.stringify(formRef.current))
+          .post(`/api/addClient`, JSON.stringify(formRef.current))
           .then((res) => {
             getData();
             modalRef.current.close();
@@ -317,7 +440,7 @@ const Main = () => {
   const delData = (params) => {
     console.log("delData");
     
-    const selectRows = gridRef2.current.getSelectedRows();
+    const selectRows = gridRef.current.getSelectedRows();
     
     if(selectRows.length === 0) {
       modalRef.current.open({ title:"알림", message:"선택된 항목이 없습니다.", cancelText:"" });
@@ -337,7 +460,7 @@ const Main = () => {
         console.log(res);
         
         axiosInstance
-          .post(`/api/delCategory`, JSON.stringify(selectRows))
+          .post(`/api/delClient`, JSON.stringify(selectRows))
           .then((res) => {
             getData();
             modalRef.current.close();
@@ -356,7 +479,7 @@ const Main = () => {
 
   // 그리드 onGridReady
   const onGridReady = (params) => {
-    gridRef2.current = params.api; // Grid API 저장
+    gridRef.current = params.api; // Grid API 저장
 
     // 행 클릭 이벤트
     params.api.addEventListener("rowClicked", (ev) => {
@@ -394,6 +517,34 @@ const Main = () => {
             <Table bordered style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
               <tbody>
                 <tr>
+                  <th className="bg-light text-end align-middle">거래처코드</th>
+                  <td className="">
+                    <div className="d-flex gap-2">
+                      <Form.Control 
+                        type="text"
+                        name="client_code"
+                        value={form.client_code}
+                        onChange={handleChange}
+                        size="sm" 
+                        className="w-auto"
+                      />
+                    </div>
+                  </td>
+
+                  <th className="bg-light text-end align-middle">거래처명</th>
+                  <td className="">
+                    <div className="d-flex gap-2">
+                      <Form.Control 
+                        type="text"
+                        name="client_name"
+                        value={form.client_name}
+                        onChange={handleChange}
+                        size="sm" 
+                        className="w-auto"
+                      />
+                    </div>
+                  </td>
+
                   <th className="bg-light text-end align-middle">거래처유형</th>
                   <td className="">
                     <div className="d-flex gap-2">
@@ -405,37 +556,15 @@ const Main = () => {
                         className="w-auto"
                       >
                         <option value="">전체</option>
+                        {(optClientType || []).map((opt) => (
+                          <option key={opt.code} value={opt.code}>
+                            {opt.code_name}
+                          </option>
+                        ))}
                       </Form.Select>
-                      
-                      
                     </div>
                   </td>
-                  <th className="bg-light text-end align-middle">거래처코드</th>
-                  <td className="">
-                    <div className="d-flex gap-2">
-                      <Form.Control 
-                        type="text"
-                        name="client_id"
-                        value={form.client_id}
-                        onChange={handleChange}
-                        size="sm" 
-                        className="w-auto"
-                      />
-                    </div>
-                  </td>
-                  <th className="bg-light text-end align-middle">거래처명</th>
-                  <td className="">
-                    <div className="d-flex gap-2">
-                      <Form.Control 
-                        type="text"
-                        name="client_nm"
-                        value={form.client_nm}
-                        onChange={handleChange}
-                        size="sm" 
-                        className="w-auto"
-                      />
-                    </div>
-                  </td>
+
                   <th className="bg-light text-end align-middle">사용여부</th>
                   <td className="">
                     

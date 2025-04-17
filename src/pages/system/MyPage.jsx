@@ -50,7 +50,7 @@ const MyPage = () => {
      
         <Row className="">
           <Col className="d-flex gap-2 align-items-center">
-            <Table bordered style={{ width: 'auto', tableLayout: 'auto' }}>
+            <Table bordered hover style={{ width: 'auto', tableLayout: 'auto' }}>
               <tbody>
                 <tr>
                   <th className="bg-light text-end align-middle">이메일</th>

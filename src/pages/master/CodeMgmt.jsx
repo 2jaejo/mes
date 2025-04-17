@@ -23,7 +23,7 @@ const Main = () => {
   // 그리드 설정
   const [rowData, setRowData] = useState();
   const [columnDefs] = useState([
-    { headerName: "그룹", field: "group_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
+    { headerName: "그룹", field: "group_code", sortable: true, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "그룹명", field: "group_name", sortable: false, editable: true, filter: "agTextColumnFilter", align:"left"},
     { 
       headerName: "사용여부", 
@@ -57,7 +57,7 @@ const Main = () => {
   // 그리드2 설정
   const [rowData2, setRowData2] = useState();
   const [columnDefs2] = useState([
-    { headerName: "코드", field: "code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
+    { headerName: "코드", field: "code", sortable: true, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "코드명", field: "code_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
     { 
       headerName: "사용여부", 
@@ -423,7 +423,7 @@ const Main = () => {
     console.log("addData");
 
     // 폼 초기화
-    formRef.current = DEFAULT_FORM();
+    formRef.current = DEFAULT_FORM({use_yn:'Y'});
 
     modalRef.current.open({
       title: "그룹 추가",
@@ -445,6 +445,11 @@ const Main = () => {
 
         if(formRef.current.group_name === ""){
           modalRef2.current.open({ title:"알림", message:"분류명을 입력하세요.", cancelText:"" });
+          return;
+        }
+
+        if(formRef.current.sort === ""){
+          modalRef2.current.open({ title:"알림", message:"정렬순서를 입력하세요.", cancelText:"" });
           return;
         }
 
@@ -607,6 +612,11 @@ const Main = () => {
         
         if(formRef2.current.code_name === ""){
           modalRef2.current.open({ title:"알림", message:"코드명을 입력하세요.", cancelText:"" });
+          return;
+        }
+
+        if(formRef2.current.sort === ""){
+          modalRef2.current.open({ title:"알림", message:"정렬순서를 입력하세요.", cancelText:"" });
           return;
         }
         

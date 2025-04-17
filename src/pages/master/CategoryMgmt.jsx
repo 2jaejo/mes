@@ -40,12 +40,12 @@ const Main = () => {
       },
        // Y/N 값을 true/false로 변환하여 체크박스 표시
       valueGetter: (params) => {
-        return params.data.use_yn === 'y';
+        return params.data.use_yn === 'Y';
       },
 
       // 체크박스 변경 시 true/false → Y/N 으로 반영
       valueSetter: (params) => {
-        const newValue = params.newValue ? 'y' : 'n';
+        const newValue = params.newValue ? 'Y' : 'N';
         if (params.data.use_yn !== newValue) {
           params.data.use_yn = newValue;
           return true; // 값이 바뀐 경우만 true
@@ -74,12 +74,12 @@ const Main = () => {
       },
        // Y/N 값을 true/false로 변환하여 체크박스 표시
       valueGetter: (params) => {
-        return params.data.use_yn === 'y';
+        return params.data.use_yn === 'Y';
       },
 
       // 체크박스 변경 시 true/false → Y/N 으로 반영
       valueSetter: (params) => {
-        const newValue = params.newValue ? 'y' : 'n';
+        const newValue = params.newValue ? 'Y' : 'N';
         if (params.data.use_yn !== newValue) {
           params.data.use_yn = newValue;
           return true; // 값이 바뀐 경우만 true
@@ -733,7 +733,7 @@ const Main = () => {
       <div className="mb-2 bg-light">
         <Row className="">
           <Col className="d-flex gap-2">
-            <Table bordered style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
+            <Table bordered hover style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
               <tbody>
                 <tr>
                   <th className="bg-light text-end align-middle">대분류코드</th>
@@ -764,8 +764,7 @@ const Main = () => {
                   </td>
                     
                   <td className="">
-                    <Button size="sm" variant="secondary" onClick={getData}>검색</Button>
-                    
+                    <Button size="sm" variant="primary" onClick={getData}><i className="bi bi-search"></i></Button>
                   </td>
                 </tr>
                 
@@ -805,7 +804,7 @@ const Main = () => {
               </div>
 
               <div className="mb-2 p-2 border bg-light">
-                <Table bordered style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
+                <Table bordered hover style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
                   <tbody>
                     <tr>
                       <th className="bg-light text-end align-middle">대분류코드</th>

@@ -481,7 +481,7 @@ const MemberMngt = () => {
               ) : (
                 <div>
 
-                  <Table key={"tb_userInfo"} bordered style={{ width: 'auto', tableLayout: 'auto' }}>
+                  <Table key={"tb_userInfo"} bordered hover style={{ width: 'auto', tableLayout: 'auto' }}>
                     <tbody>
                       <tr>
                         <th className="bg-light text-end align-middle">아이디</th>
@@ -594,7 +594,7 @@ const MemberMngt = () => {
               ) : (
                 <div>
 
-                  <Table key={"tb_userMenu"} bordered style={{ width: 'auto', tableLayout: 'auto' }}>
+                  <Table key={"tb_userMenu"} bordered hover style={{ width: 'auto', tableLayout: 'auto' }}>
                     <tbody>
                       {menuList.map((menu) => (
 
