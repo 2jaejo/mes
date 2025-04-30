@@ -31,7 +31,7 @@ const Navi = ({menu, addTab}) => {
   return (
     <div className='navi d-flex justify-content-between align-items-center p-2' style={{backgroundColor:theme.bgColor}}>
     {/* <div className='navi d-flex justify-content-between align-items-center p-2' > */}
-      <nav className="navbar navbar-expand-lg p-0">
+      <nav className="navbar navbar-expand p-0">
         <ul className="navbar-nav me-auto mb-2 mb-lg-0 d-flex flex-row" >
           {menuItems.map((menu, index) => (
             <li

@@ -1,0 +1,1 @@
+export const MainContentStyle = { height: '87vh', display: 'flex', flexDirection: 'column', gap: '0.6rem' };

@@ -13,10 +13,11 @@ const Main = () => {
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [loading3, setLoading3] = useState(false);
-
+  
   const gridRef = useRef();  
   const gridRef2 = useRef();
   const gridRef3 = useRef();
+  
 
   // selectbox
   const selectBox = useRef({}); 
@@ -54,7 +55,7 @@ const Main = () => {
   };
     
   // 거래처정보 그리드 설정
-  const [rowData, setRowData] = useState();
+  const [rowData, setRowData] = useState([]);
   const [columnDefs] = useState([
     { headerName: "거래처코드", field: "client_code", sortable: true, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "거래처", field: "client_name", sortable: true, editable: false, filter: "agTextColumnFilter", align:"left"},
@@ -64,7 +65,7 @@ const Main = () => {
   ]);
 
   // 품목정보 그리드 설정
-  const [rowData2, setRowData2] = useState();
+  const [rowData2, setRowData2] = useState([]);
   const [columnDefs2] = useState([
     { headerName: "품목코드", field: "item_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "품목명", field: "item_name", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"left"},
@@ -80,7 +81,7 @@ const Main = () => {
         return Number(params.value).toLocaleString('ko-KR', {maximumFractionDigits: 0});
       },
     },
-    { headerName: "판매단가", field: "price", sortable: true, editable: true, align:"right",
+    { headerName: '단가', field: "price", sortable: true, editable: true, align:"right",
       valueFormatter: (params) => {
         if (params.value == null) return '';
         const num = Number(params.value).toLocaleString('ko-KR', {maximumFractionDigits: 0});
@@ -139,10 +140,17 @@ const Main = () => {
   ]);
 
 
+  
+
+  
+
+
   // 검색창 입력필드
   const [form, setForm] = useState({
     client_code: '',
     client_name: '',
+    client_type: '',
+    use_yn: 'Y',
   });
 
   // 검색창 입력필드 변경 저장
@@ -153,23 +161,29 @@ const Main = () => {
 
   // 품목정보 추가 모달
   const DEFAULT_FORM2 = (init={}) => ({
-    category_id:'',
-    category_nm:'',
-    sort: '',
+    item_type:'',
+    item_group_a:'',
+    item_group_b:'',
     use_yn: '',
-    comment: '',
-    parent_id: '',
-    parent_nm: '',
+    item_code:'',
+    item_name:'',
+    client_code:'',
+    client_name:'',
     ...init
   });
 
   const formRef2 = useRef();
+  const formRef3 = useRef();
 
   const formRefChange2 = (name, value) => {
     formRef2.current[name] = value;
   };
 
-  const ModalForm2 = ({ form={}, onChangeHandler }) => {
+  const formRefChange3 = (params) => {
+    formRef3.current = params;
+  };
+
+  const ModalForm2 = ({ form={}, onChangeHandler, onSelectRow }) => {
     console.log("ModalForm2");
 
     const [modalForm, setModalForm] = useState(form);
@@ -179,6 +193,74 @@ const Main = () => {
       setModalForm(prev => ({ ...prev, [name]: value }));
       onChangeHandler(name, value);
     };
+
+    // 모달 품목 조회
+    const getData4 = (params) => {
+      console.log("getData4");
+
+      setLoading4(true);
+
+      axiosInstance
+        .post(`/api/getItem`, JSON.stringify(formRef2.current))
+        .then((res) => {
+          setRowData4(res.data);
+        
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+          modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
+        })
+        .finally(() =>{
+          setLoading4(false);
+        });
+    };
+
+    const gridRef4 = useRef();
+    const [loading4, setLoading4] = useState(false);
+    const [rowData4, setRowData4] = useState();
+    const [columnDefs4] = useState([
+      { headerName: "품목코드", field: "item_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
+      { headerName: "품목명", field: "item_name", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"left"},
+      { headerName: "품목유형", field: "item_type", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center"},
+      { headerName: "품목대분류", field: "item_group_a", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center"},
+      { headerName: "품목소분류", field: "item_group_b", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center"},
+      { headerName: "기준단위", field: "base_unit", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center"},
+      { headerName: "거래처", field: "client_list", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"left"},
+      { headerName: "비고", field: "comment", sortable: true, editable: false, align:"left"},
+    ]);
+
+    // 변경이력 그리드 onGridReady
+    const onGridReady4 = (params) => {
+      gridRef4.current = params.api; // Grid API 저장
+
+      // 행 클릭 이벤트
+      params.api.addEventListener("rowClicked", (ev) => {
+        console.log("rowClicked");
+        console.log(ev);
+        const selectedRows = ev.api.getSelectedRows();
+        onSelectRow(selectedRows[0]);
+      });
+
+      // 셀 값 변경 이벤트
+      params.api.addEventListener("cellValueChanged", (ev) => {
+        console.log("cellValueChanged");
+        console.log(ev);
+      });
+
+      
+      // 선택 변경 이벤트
+      params.api.addEventListener("selectionChanged", (ev) => {
+        console.log("selectionChanged");
+        console.log(ev);
+      });
+
+    };
+
+
+    useEffect(() => {
+      // 폼 초기화
+      getData4();
+    },[]);
 
     return (
       <div style={{ height: '50vh', display: 'flex', flexDirection: 'column' }}>
@@ -265,7 +347,7 @@ const Main = () => {
                 </div>
               </td>                    
               <td className="">
-                <Button size="sm" variant="primary" onClick={getData3}><i className="bi bi-search"></i></Button>
+                <Button size="sm" variant="primary" onClick={getData4}><i className="bi bi-search"></i></Button>
               </td>
             </tr>
            
@@ -274,14 +356,14 @@ const Main = () => {
 
         <div className="h-100 d-flex flex-column gap-0">
           <div className="d-flex gap-2 justify-content-start align-items-center">
-            <span className="fw-bold my-2">변경 이력</span>
+            <span className="fw-bold my-2">품목 목록</span>
           </div>
 
           <GridExample
-            columnDefs={columnDefs3}
-            rowData={rowData3}
-            onGridReady={onGridReady3} 
-            loading={loading3}
+            columnDefs={columnDefs4}
+            rowData={rowData4}
+            onGridReady={onGridReady4} 
+            loading={loading4}
             rowNum={true}
             rowSel={"singleRow"}
             pageSize={10}  
@@ -370,15 +452,19 @@ const Main = () => {
   const addData2 = (params) => {
     console.log("addData2");
 
-    // 폼 초기화
+    const sel_rows = gridRef.current.getSelectedRows();
+    if(sel_rows.length === 0) {
+      modalRef.current.open({ title:"알림", message:"거래처를 선택하세요.", cancelText:"" });
+      return;
+    }
 
     formRef2.current = DEFAULT_FORM2();
-    
+
 
     modalRef.current.open({
       title: "단가 추가",
       message: "추가하시겠습니까?",
-      content: <ModalForm2 form={formRef2.current} onChangeHandler={formRefChange2} />,
+      content: <ModalForm2 form={formRef2.current} onChangeHandler={formRefChange2} onSelectRow={formRefChange3} />,
       onCancel: ()=>{
         modalRef.current.close();
       },
@@ -386,22 +472,16 @@ const Main = () => {
       confirmClass:"btn btn-success",
       onConfirm: (res) => {
         
-        if(formRef2.current.category_id === "" || formRef2.current.category_id === undefined){
-          modalRef2.current.open({ title:"알림", message:"분류코드를 입력하세요.", cancelText:"" });
+        console.log(formRef3.current);
+        if(!formRef3.current){
+          modalRef2.current.open({ title:"알림", message:"품목을 선택하세요.", cancelText:"" });
           return;
         }
-        
-        if(formRef2.current.category_nm === ""){
-          modalRef2.current.open({ title:"알림", message:"분류명을 입력하세요.", cancelText:"" });
-          return;
-        }
-        
-        // 소분류 아이디 조합
-        formRef2.current["category_id"] = formRef2.current["parent_id"] + '-' + formRef2.current["category_id"];
-        console.log(formRef2.current);
+
+        formRef3.current['client_code'] = sel_rows[0].client_code;
 
         axiosInstance
-          .post(`/api/addCategory`, JSON.stringify(formRef2.current))
+          .post(`/api/addPrice`, JSON.stringify(formRef3.current))
           .then((res) => {
             getData();
             modalRef.current.close();
@@ -483,6 +563,9 @@ const Main = () => {
   };
 
 
+  
+
+
   // 거래처정보 그리드 onGridReady
   const onGridReady = (params) => {
     gridRef.current = params.api; // Grid API 저장
@@ -517,6 +600,7 @@ const Main = () => {
       console.log(ev);
       const selectedRows = ev.api.getSelectedRows();
       if( ev.source !== 'rowDataChanged' && selectedRows.length > 0 ){
+        console.log(selectedRows[0].client_type);
         getData2(selectedRows[0]);
       };
 
@@ -573,9 +657,13 @@ const Main = () => {
     params.api.addEventListener("selectionChanged", (ev) => {
       console.log("selectionChanged");
       console.log(ev);
+
+      
     });
 
   };
+
+  
 
   
   return (
@@ -612,7 +700,28 @@ const Main = () => {
                       />
                     </div>
                 
-                  </td>                    
+                  </td>  
+                  <th className="bg-light text-end align-middle">거래처유형</th>
+                  <td className="">
+                    <div className="d-flex gap-2">
+                      <Form.Select 
+                        name="client_type" 
+                        value={form.client_type} 
+                        onChange={handleChange}
+                        size="sm"
+                        className="w-auto"
+                      >
+                        <option value="">전체</option>
+                        {(selectBox.current.common?.['cd001'] || [])
+                          .filter(opt => opt.use_yn === 'Y')
+                          .map(opt => (
+                            <option key={opt.code} value={opt.code}>
+                              {opt.code_name}
+                            </option>
+                        ))}
+                      </Form.Select>
+                    </div>
+                  </td>                  
                   <td className="">
                     <Button size="sm" variant="primary" onClick={getData}><i className="bi bi-search"></i></Button>
                   </td>

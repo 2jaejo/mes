@@ -4,22 +4,116 @@ import { Row, Col, Form, Button, Table } from 'react-bootstrap';
 import axiosInstance from "utils/Axios";
 import GridExample from "components/GridExample";
 import Modal from "components/Modal";
-import { ContentSteeringController } from "hls.js";
 
 
 const Main = () => {
+
+  // 모달 ref
   const modalRef = useRef();  
   const modalRef2 = useRef();  
 
-  const [loading, setLoading] = useState(false);
+
+  // 그리드 설정 시작 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
   const gridRef = useRef();  
-  const gridRef2 = useRef();  
-
   const [selectedRow, setSelectedRow] = useState(0); 
-  
+  const [loading, setLoading] = useState(false);
   const [rowData, setRowData] = useState();
   const [columnDefs, setColumnDefs] = useState([]);
+  
+
+  const col_a = [
+    { headerName: "공정코드", field: "process_code", sortable: true, editable: false, align:"left", filter: "agTextColumnFilter"},
+    { headerName: "공정명", field: "process_name", sortable: true, editable: false, align:"left", filter: "agTextColumnFilter" },
+    { headerName: "공정유형", field: "process_type", sortable: true, editable: false, align:"center", filter: "agTextColumnFilter", 
+      valueFormatter:(params)=> typeFormatter(params,'cd011')
+    },
+    { headerName: "검사여부", field: "check_yn", sortable: true, editable: false, align:"center",
+      backgroundColor: "#a7d1ff29",
+      cellRenderer: 'agCheckboxCellRenderer',
+      cellRendererParams: {
+        disabled: false,
+      },
+      // Y/N 값을 true/false로 변환하여 체크박스 표시
+      valueGetter: (params) => {
+        return params.data.use_yn === 'Y';
+      },
+
+      // 체크박스 변경 시 true/false → Y/N 으로 반영
+      valueSetter: (params) => {
+        const newValue = params.newValue ? 'Y' : 'N';
+        if (params.data.use_yn !== newValue) {
+          params.data.use_yn = newValue;
+          return true; // 값이 바뀐 경우만 true
+        }
+        return false; // 변경 없음
+      },
+    },
+    { headerName: "사용여부", field: "use_yn", sortable: true, editable: false, align:"center",
+      backgroundColor: "#a7d1ff29",
+      cellRenderer: 'agCheckboxCellRenderer',
+      cellRendererParams: {
+        disabled: false,
+      },
+      // Y/N 값을 true/false로 변환하여 체크박스 표시
+      valueGetter: (params) => {
+        return params.data.use_yn === 'Y';
+      },
+
+      // 체크박스 변경 시 true/false → Y/N 으로 반영
+      valueSetter: (params) => {
+        const newValue = params.newValue ? 'Y' : 'N';
+        if (params.data.use_yn !== newValue) {
+          params.data.use_yn = newValue;
+          return true; // 값이 바뀐 경우만 true
+        }
+        return false; // 변경 없음
+      },
+    },
+    { headerName: "비고", field: "comment", sortable: false, editable: true, align:"left", minWidth:500 },
+  ];
+
+
+
+
+  // 그리드 onGridReady
+  const onGridReady = (params) => {
+    gridRef.current = params.api; // Grid API 저장
+
+    // 행 클릭 이벤트
+    params.api.addEventListener("rowClicked", (ev) => {
+      console.log("rowClicked");
+      console.log(ev);
+      setSelectedRow(ev.rowIndex); 
+
+      const node = ev.node;
+      if (!node.isSelected()) {
+        node.setSelected(true);
+      }
+    });
+
+    // 셀 값 변경 이벤트
+    params.api.addEventListener("cellValueChanged", (ev) => {
+      console.log("cellValueChanged");
+      console.log(ev);
+      setData(ev.data);
+    });
+
+    // 선택 변경 이벤트
+    params.api.addEventListener("selectionChanged", (ev) => {
+      console.log("selectionChanged");
+      console.log(ev);
+   
+    });
+
+  };
+
+  
+
+  // 그리드 설정 종료 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
   // selectbox
   const selectBox = useRef({}); 
@@ -30,6 +124,8 @@ const Main = () => {
     const item = arr_client_type.find(el => el.code === params.value);
     return item ? item.code_name : params.value; 
   };
+
+
 
   // 초기화
   useEffect(()=>{
@@ -46,56 +142,7 @@ const Main = () => {
       selectBox.current = res.data;
 
       // 공정목록 그리드 설정
-      setColumnDefs([
-        { headerName: "공정코드", field: "process_code", sortable: true, editable: false, align:"left", filter: "agTextColumnFilter"},
-        { headerName: "공정명", field: "process_name", sortable: true, editable: false, align:"left", filter: "agTextColumnFilter" },
-        { headerName: "공정유형", field: "process_type", sortable: true, editable: false, align:"center", filter: "agTextColumnFilter", 
-          valueFormatter:(params)=> typeFormatter(params,'cd011')
-        },
-        { headerName: "검사여부", field: "check_yn", sortable: true, editable: false, align:"center",
-          backgroundColor: "#a7d1ff29",
-          cellRenderer: 'agCheckboxCellRenderer',
-          cellRendererParams: {
-            disabled: false,
-          },
-          // Y/N 값을 true/false로 변환하여 체크박스 표시
-          valueGetter: (params) => {
-            return params.data.use_yn === 'Y';
-          },
-
-          // 체크박스 변경 시 true/false → Y/N 으로 반영
-          valueSetter: (params) => {
-            const newValue = params.newValue ? 'Y' : 'N';
-            if (params.data.use_yn !== newValue) {
-              params.data.use_yn = newValue;
-              return true; // 값이 바뀐 경우만 true
-            }
-            return false; // 변경 없음
-          },
-        },
-        { headerName: "사용여부", field: "use_yn", sortable: true, editable: false, align:"center",
-          backgroundColor: "#a7d1ff29",
-          cellRenderer: 'agCheckboxCellRenderer',
-          cellRendererParams: {
-            disabled: false,
-          },
-          // Y/N 값을 true/false로 변환하여 체크박스 표시
-          valueGetter: (params) => {
-            return params.data.use_yn === 'Y';
-          },
-
-          // 체크박스 변경 시 true/false → Y/N 으로 반영
-          valueSetter: (params) => {
-            const newValue = params.newValue ? 'Y' : 'N';
-            if (params.data.use_yn !== newValue) {
-              params.data.use_yn = newValue;
-              return true; // 값이 바뀐 경우만 true
-            }
-            return false; // 변경 없음
-          },
-        },
-        { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:500 },
-      ]);
+      setColumnDefs(col_a);
 
       getData();
     })
@@ -284,23 +331,22 @@ const Main = () => {
     })
     .catch((error) => {
       console.error("Error fetching data:", error);
-      modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
+      modalRef.current.open({ title:error.code, message:error.message, cancelText:"", confirmClass:"btn btn-danger" });
     })
     .finally(() =>{
       setLoading(false);
 
       // 그리드 행 선택
-      // let sel = selectedRow;
-      // if(typeof params === "number") sel = params;
-      // gridRef.current.forEachNode((node) => {
-      //   if (node.rowIndex === sel) {
-      //     node.setSelected(true);
-      //   }
-      // });
+      let sel = selectedRow;
+      if(typeof params === "number") sel = params;
+      gridRef.current.forEachNode((node) => {
+        if (node.rowIndex === sel) {
+          node.setSelected(true);
+        }
+      });
     });
     
   };
-
 
 
   // 수정
@@ -317,6 +363,7 @@ const Main = () => {
         modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
       });   
   };
+
 
 
   // 추가
@@ -410,47 +457,13 @@ const Main = () => {
     
   };
 
-
-
-  // 그리드 onGridReady
-  const onGridReady = (params) => {
-    gridRef.current = params.api; // Grid API 저장
-
-    // 행 클릭 이벤트
-    params.api.addEventListener("rowClicked", (ev) => {
-      console.log("rowClicked");
-      console.log(ev);
-      setSelectedRow(ev.rowIndex); 
-    });
-
-    // 셀 값 변경 이벤트
-    params.api.addEventListener("cellValueChanged", (ev) => {
-      console.log("cellValueChanged");
-      console.log(ev);
-      setData(ev.data);
-    });
-
-    // 선택 변경 이벤트
-    params.api.addEventListener("selectionChanged", (ev) => {
-      console.log("selectionChanged");
-      console.log(ev);
-      // const selectedRows = ev.api.getSelectedRows();
-      // if( ev.source !== 'rowDataChanged' && selectedRows.length > 0 ){
-      //   getData(selectedRows[0]);
-      // };
-
-    });
-
-  };
-
-
   
   return (
-    <div style={{ height: '87vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '87vh', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
       <Modal ref={modalRef} />
       <Modal ref={modalRef2} />
 
-      <div className="mb-2 bg-light">
+      <div className="bg-light">
         <Row className="">
           <Col className="d-flex gap-2">
             <Table bordered hover style={{ width: 'auto', tableLayout: 'auto' }} className="m-0">
@@ -540,9 +553,9 @@ const Main = () => {
 
       <div className="h-100">
         <Row  className="h-100">
-          <Col className="pe-0 h-100 d-flex flex-column" xs={12} md={12}>
-            <div className="d-flex gap-2 justify-content-start align-items-center">
-              <span className="fw-bold my-2">공정 목록</span>
+          <Col className="h-100 d-flex flex-column" xs={12} md={12}>
+            <div className="mb-1 d-flex gap-2 justify-content-start align-items-center">
+              <span className="fw-bold">공정 목록</span>
               <Button size="sm" variant="success" onClick={addData}>추가</Button>
               <Button size="sm" variant="danger" onClick={delData}>삭제</Button>
             </div>
@@ -553,15 +566,15 @@ const Main = () => {
               onGridReady={onGridReady} 
               loading={loading}
               rowNum={true}
-              rowSel={"multiRow"}
+              rowSel={"singleRow"}
             />
           </Col>
-
-          
         </Row>
 
       </div>
 
+      
+    
 
     </div>
   );

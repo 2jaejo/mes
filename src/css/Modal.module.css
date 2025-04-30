@@ -23,7 +23,7 @@
 }
 
 .modal:hover {
-  transform: scale(1.05); /* 모달 hover 시 약간 확대 */
+  /* transform: scale(1.05);*/ /*모달 hover 시 약간 확대 */
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* hover 시 그림자 효과를 조금 더 강하게 */
 }
 

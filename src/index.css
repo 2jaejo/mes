@@ -35,7 +35,7 @@ code {
 }
 
 
-@media (min-width: 769px) {
+@media (min-width: 400px) {
   /* 전체 레이아웃 스타일 */
   .main {
     display: grid;
@@ -44,7 +44,7 @@ code {
       "article";
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
-    gap: 10px;
+    gap: 1px;
     height: 100vh;
   }
 
@@ -55,6 +55,7 @@ code {
     color: white;
     text-align: center;
     min-height:8vh;
+
   }
 
   .navi {
@@ -293,3 +294,5 @@ li.expanded {
 .ag-header-cell-label {
   justify-content: center;
 }
+
+

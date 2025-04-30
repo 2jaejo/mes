@@ -10,33 +10,9 @@ const Main = () => {
   const modalRef = useRef();  
   const modalRef2 = useRef();  
 
-  const [loading, setLoading] = useState(false);
 
   // selectbox
   const selectBox = useRef({}); 
-
-  // 초기화 selectbox list
-  useEffect(()=>{
-    console.log("useEffect");
-    
-    const init = {
-      category: '',
-      code: ['cd004', 'cd005', 'cd006']
-    };
-
-    axiosInstance
-    .post(`/api/getDropDown`, JSON.stringify(init))
-    .then((res) => {
-        selectBox.current = res.data;
-        getData();
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
-      });  
-  },[]);
-
-
 
   // 검색창 입력필드
   const [form, setForm] = useState({
@@ -56,7 +32,7 @@ const Main = () => {
   }; 
 
 
-  // 품목분류1 값 저장
+  // 추가모달 품목분류1 값 저장
   const usePrevious = (value) => {
     const ref = useRef();
     useEffect(() => {
@@ -67,7 +43,7 @@ const Main = () => {
 
   const prevGroup = usePrevious(form.item_group_a);
 
-  // 품목분류1 변경 감지
+  // 추가모달 품목분류1 변경 감지
   useEffect(()=>{
     console.log("useEffect2");
     if (prevGroup !== form.item_group_a) {
@@ -76,21 +52,62 @@ const Main = () => {
         item_group_b: ''
       }));
     }
-  },[form.item_group_a]);
+  },[form.item_group_a, prevGroup]);
 
 
-  // 그리드 레퍼
-  const gridRef = useRef();  
+  // grid cell code_name 변환
+  const categoryAFormatter = (params) => {
+    const arr_client_type = selectBox.current.category?.item_group_a || [];
+    const item = arr_client_type.find(el => el.category_id === params.value);
+    return item ? item.category_nm : params.value; 
+  };
 
+  // grid cell code_name 변환
+  const categoryBFormatter = (params) => {
+    console.log(params);
+    const arr_client_type = selectBox.current.category?.item_group_b[params.data.item_group_a] || [];
+    const item = arr_client_type.find(el => el.category_id === params.value);
+    return item ? item.category_nm : params.value; 
+  };
+
+  // grid cell code_name 변환
+  const commonTypeFormatter = (params, cd) => {
+    const arr_client_type = selectBox.current.common?.[cd] || [];
+    const item = arr_client_type.find(el => el.code === params.value);
+    return item ? item.code_name : params.value; 
+  };
+
+
+  
   // 그리드 설정
+  const gridRef = useRef();  
   const [rowData, setRowData] = useState();
-  const [columnDefs] = useState([
+  const [columnDefs, setColumnDefs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const col_a = [
+    { headerName: "품목대분류", field: "item_group_a", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
+      valueFormatter: (params) => categoryAFormatter(params),
+    },
+    { headerName: "품목소분류", field: "item_group_b", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
+      valueFormatter: (params) => categoryBFormatter(params),
+    },
     { headerName: "품목코드", field: "item_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
     { headerName: "품목명", field: "item_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
-    { headerName: "품목유형", field: "item_type", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center"},
-    { headerName: "품목대분류", field: "item_group_a", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center"},
-    { headerName: "품목소분류", field: "item_group_b", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center"},
-    { headerName: "기준단위", field: "base_unit", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center"},
+    { headerName: "품목유형", field: "item_type", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: selectBox.current.common?.['cd006'].map((item) => item.code) ?? [],
+      },
+      valueFormatter: (params) => commonTypeFormatter(params, 'cd006'),
+    },
+    { headerName: "기준단위", field: "base_unit", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: selectBox.current.common?.['cd004'].map((item) => item.code) ?? [],
+      },
+      valueFormatter: (params) => commonTypeFormatter(params, 'cd004'),
+    },
     { headerName: "거래처", field: "client_list", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
     { headerName: "단가", field: "standard_price", sortable: true, editable: true, align:"right", 
       valueFormatter: (params) => {
@@ -100,7 +117,7 @@ const Main = () => {
     },
     // { headerName: "기본창고", field: "default_warehouse", sortable: true, editable: true, align:"left"},
     { headerName: "검사방법", field: "inspection_method", sortable: true, editable: true, align:"center"},
-    { headerName: "입고검사", field: "incoming_inspection", sortable: true, editable: true, align:"center",
+    { headerName: "입고검사", field: "incoming_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
       backgroundColor: "#a7d1ff29",
       cellRenderer: 'agCheckboxCellRenderer',
       cellRendererParams: {
@@ -121,7 +138,7 @@ const Main = () => {
         return false; // 변경 없음
       },
     },
-    { headerName: "출하검사", field: "outgoing_inspection", sortable: true, editable: true, align:"center",
+    { headerName: "출하검사", field: "outgoing_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
       backgroundColor: "#a7d1ff29",
       cellRenderer: 'agCheckboxCellRenderer',
       cellRendererParams: {
@@ -142,7 +159,7 @@ const Main = () => {
         return false; // 변경 없음
       },
     },
-    { headerName: "LOT관리", field: "lot_managed", sortable: true, editable: true, align:"center",
+    { headerName: "LOT관리", field: "lot_managed", sortable: false, editable: true, align:"center", maxWidth:80,
       backgroundColor: "#a7d1ff29",
       cellRenderer: 'agCheckboxCellRenderer',
       cellRendererParams: {
@@ -163,7 +180,7 @@ const Main = () => {
         return false; // 변경 없음
       },
     },
-    { headerName: "유통기한", field: "shelf_life_managed", sortable: true, editable: true, align:"center",
+    { headerName: "유통기한", field: "shelf_life_managed", sortable: false, editable: true, align:"center", maxWidth:80,
       backgroundColor: "#a7d1ff29",
       cellRenderer: 'agCheckboxCellRenderer',
       cellRendererParams: {
@@ -188,9 +205,10 @@ const Main = () => {
     { 
       headerName: "사용여부", 
       field: "use_yn", 
-      sortable: true, 
+      sortable: false, 
       editable: false,
       align:"center",
+      maxWidth:80,
       backgroundColor: "#a7d1ff29",
       cellRenderer: 'agCheckboxCellRenderer',
       cellRendererParams: {
@@ -212,10 +230,39 @@ const Main = () => {
       },
     },
     { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
-  ]);
+  ];
 
 
-  
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  // 초기화 selectbox list
+  useEffect(()=>{
+    console.log("useEffect");
+    
+    const init = {
+      category: '',
+      code: ['cd004', 'cd005', 'cd006']
+    };
+
+    axiosInstance
+    .post(`/api/getDropDown`, JSON.stringify(init))
+    .then((res) => {
+        selectBox.current = res.data;
+
+        setColumnDefs(col_a);
+
+        getData();
+
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        modalRef.current.open({ title:"오류", message:error.response.data.message, cancelText:"" });
+      });  
+
+  },[]);
+
 
 
   // 추가 모달 기본값

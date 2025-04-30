@@ -7,7 +7,7 @@ import { AG_GRID_LOCALE_KR } from '@ag-grid-community/locale';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel="singleRow", onGridReady=null, pageSize=25} ) => {
+const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel="singleRow", onGridReady=null, pagination=true, pageSize=25, rowDrag=false} ) => {
 
   // 테마설정
   const myTheme = themeQuartz  // themeQuartz, themeAlpine, themeBalham 
@@ -43,10 +43,12 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
     let newColumnDefs = [];
     let rownumCol = { 
       headerName: "No.", 
+      field:"rownum",
       sortable: false, 
       valueGetter: (params) => params.node.rowIndex + 1, 
       minWidth:40,
       maxWidth:60,
+      rowDrag:rowDrag
     };
 
     if(rowNum){
@@ -183,12 +185,14 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
           // }}
         
           // paginationAutoPageSize={true}
-          pagination={true}
+          pagination={pagination}
           paginationPageSize={pageSize}
           paginationPageSizeSelector={paginationPageSizeSelector}
           paginationNumberFormatter={paginationNumberFormatter}
 
           loadingOverlayComponent={CustomLoadingOverlay}
+
+          rowDragManaged={rowDrag}
         />
       </div>
     </div>
