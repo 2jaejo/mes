@@ -85,153 +85,6 @@ const Main = () => {
   const [columnDefs, setColumnDefs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const col_a = [
-    { headerName: "품목대분류", field: "item_group_a", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
-      valueFormatter: (params) => categoryAFormatter(params),
-    },
-    { headerName: "품목소분류", field: "item_group_b", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
-      valueFormatter: (params) => categoryBFormatter(params),
-    },
-    { headerName: "품목코드", field: "item_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
-    { headerName: "품목명", field: "item_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
-    { headerName: "품목유형", field: "item_type", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: selectBox.current.common?.['cd006'].map((item) => item.code) ?? [],
-      },
-      valueFormatter: (params) => commonTypeFormatter(params, 'cd006'),
-    },
-    { headerName: "기준단위", field: "base_unit", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: selectBox.current.common?.['cd004'].map((item) => item.code) ?? [],
-      },
-      valueFormatter: (params) => commonTypeFormatter(params, 'cd004'),
-    },
-    { headerName: "거래처", field: "client_list", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
-    { headerName: "단가", field: "standard_price", sortable: true, editable: true, align:"right", 
-      valueFormatter: (params) => {
-        const value = parseFloat(params.value);
-        return isNaN(value) ? '' : `${value.toLocaleString()}`;
-      },
-    },
-    // { headerName: "기본창고", field: "default_warehouse", sortable: true, editable: true, align:"left"},
-    { headerName: "검사방법", field: "inspection_method", sortable: true, editable: true, align:"center"},
-    { headerName: "입고검사", field: "incoming_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
-      backgroundColor: "#a7d1ff29",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.incoming_inspection === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.incoming_inspection !== newValue) {
-          params.data.incoming_inspection = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "출하검사", field: "outgoing_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
-      backgroundColor: "#a7d1ff29",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.outgoing_inspection === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.outgoing_inspection !== newValue) {
-          params.data.outgoing_inspection = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "LOT관리", field: "lot_managed", sortable: false, editable: true, align:"center", maxWidth:80,
-      backgroundColor: "#a7d1ff29",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.lot_managed === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.lot_managed !== newValue) {
-          params.data.lot_managed = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "유통기한", field: "shelf_life_managed", sortable: false, editable: true, align:"center", maxWidth:80,
-      backgroundColor: "#a7d1ff29",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.shelf_life_managed === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.shelf_life_managed !== newValue) {
-          params.data.shelf_life_managed = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "유통기한일자", field: "shelf_life_days", sortable: true, editable: true, align:"center"},
-    { 
-      headerName: "사용여부", 
-      field: "use_yn", 
-      sortable: false, 
-      editable: false,
-      align:"center",
-      maxWidth:80,
-      backgroundColor: "#a7d1ff29",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.use_yn === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.use_yn !== newValue) {
-          params.data.use_yn = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
-  ];
-
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -251,7 +104,158 @@ const Main = () => {
     .then((res) => {
         selectBox.current = res.data;
 
-        setColumnDefs(col_a);
+        setColumnDefs([
+          { headerName: "품목대분류", field: "item_group_a", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
+            valueFormatter: (params) => categoryAFormatter(params),
+          },
+          { headerName: "품목소분류", field: "item_group_b", sortable: true, editable: false, filter: "agTextColumnFilter",  align:"center",
+            valueFormatter: (params) => categoryBFormatter(params),
+          },
+          { headerName: "품목코드", field: "item_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
+          { headerName: "품목명", field: "item_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
+          { headerName: "품목유형", field: "item_type", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
+            cellEditor: "agSelectCellEditor",
+            cellEditorParams: {
+              values: selectBox.current.common?.['cd006'].map((item) => item.code) ?? [],
+            },
+            valueFormatter: (params) => commonTypeFormatter(params, 'cd006'),
+          },
+          { headerName: "기준단위", field: "base_unit", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"center",
+            cellEditor: "agSelectCellEditor",
+            cellEditorParams: {
+              values: selectBox.current.common?.['cd004'].map((item) => item.code) ?? [],
+            },
+            valueFormatter: (params) => commonTypeFormatter(params, 'cd004'),
+          },
+          { headerName: "거래처", field: "client_list", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
+          { headerName: "단가", field: "standard_price", sortable: true, editable: true, align:"right", 
+            valueFormatter: (params) => {
+              const value = parseFloat(params.value);
+              return isNaN(value) ? '' : `${value.toLocaleString()}`;
+            },
+          },
+          // { headerName: "기본창고", field: "default_warehouse", sortable: true, editable: true, align:"left"},
+          { headerName: "검사방법", field: "inspection_method", sortable: true, editable: true, align:"center",
+            cellEditor: "agSelectCellEditor",
+            cellEditorParams: {
+              values: selectBox.current.common?.['cd005'].map((item) => item.code) ?? [],
+            },
+            valueFormatter: (params) => commonTypeFormatter(params, 'cd005'),
+          },
+          { headerName: "입고검사", field: "incoming_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
+            backgroundColor: "#a7d1ff29",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.incoming_inspection === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.incoming_inspection !== newValue) {
+                params.data.incoming_inspection = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "출하검사", field: "outgoing_inspection", sortable: false, editable: true, align:"center", maxWidth:80,
+            backgroundColor: "#a7d1ff29",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.outgoing_inspection === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.outgoing_inspection !== newValue) {
+                params.data.outgoing_inspection = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "LOT관리", field: "lot_managed", sortable: false, editable: true, align:"center", maxWidth:80,
+            backgroundColor: "#a7d1ff29",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.lot_managed === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.lot_managed !== newValue) {
+                params.data.lot_managed = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "유통기한", field: "shelf_life_managed", sortable: false, editable: true, align:"center", maxWidth:80,
+            backgroundColor: "#a7d1ff29",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.shelf_life_managed === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.shelf_life_managed !== newValue) {
+                params.data.shelf_life_managed = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "유통기한일자", field: "shelf_life_days", sortable: true, editable: true, align:"center"},
+          { 
+            headerName: "사용여부", 
+            field: "use_yn", 
+            sortable: false, 
+            editable: false,
+            align:"center",
+            maxWidth:80,
+            backgroundColor: "#a7d1ff29",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.use_yn === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.use_yn !== newValue) {
+                params.data.use_yn = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
+        ]);
 
         getData();
 

@@ -7,7 +7,7 @@ import { AG_GRID_LOCALE_KR } from '@ag-grid-community/locale';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel="singleRow", onGridReady=null, pagination=true, pageSize=25, rowDrag=false} ) => {
+const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel="singleRow", onGridReady=null, pagination=true, pageSize=25, rowDrag=false, pinnedBottomRowData=[]} ) => {
 
   // 테마설정
   const myTheme = themeQuartz  // themeQuartz, themeAlpine, themeBalham 
@@ -45,7 +45,7 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
       headerName: "No.", 
       field:"rownum",
       sortable: false, 
-      valueGetter: (params) => params.node.rowIndex + 1, 
+      valueGetter: (params) => !params.node.rowPinned ?params.node.rowIndex + 1 : '', 
       minWidth:40,
       maxWidth:60,
       rowDrag:rowDrag
@@ -65,7 +65,7 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
         let bgColor = '';
 
         // 1. editable일 경우 기본 배경
-        if (params.colDef.editable) {
+        if (!params.node.rowPinned && params.colDef.editable) {
           bgColor = '#a7d1ff29';
         }
 
@@ -97,6 +97,13 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
       unSortIcon: true, // 기본 정렬 아이콘 표시
       align:"center"
     };
+  }, []);
+
+  // 기본 행 스타일
+  const getRowStyle = useCallback((params) => {
+    if (params.node.rowPinned) {
+      return { fontWeight: "bold", backgroundColor: "white" };
+    }
   }, []);
   
 
@@ -193,6 +200,8 @@ const GridExample = ( {columnDefs, rowData, loading=false, rowNum=false, rowSel=
           loadingOverlayComponent={CustomLoadingOverlay}
 
           rowDragManaged={rowDrag}
+          pinnedBottomRowData={pinnedBottomRowData}
+          getRowStyle={getRowStyle}
         />
       </div>
     </div>

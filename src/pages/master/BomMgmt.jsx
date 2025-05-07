@@ -214,7 +214,7 @@ const Main = () => {
       // 그리드 설정
       setColumnDefs(col_a);
 
-      form.item_type = (selectBox.current.common?.['cd006'] || []).filter(opt => opt.use_yn === 'Y' && opt.opt1 === '1')[0].code;
+      form.item_type = (selectBox.current.common?.['cd006'] || []).filter(opt => opt.use_yn === 'Y' && opt.opt1 !== '1')[0].code;
 
       getData();
     })

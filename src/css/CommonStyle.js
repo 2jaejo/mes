@@ -1,1 +1,2 @@
 export const MainContentStyle = { height: '87vh', display: 'flex', flexDirection: 'column', gap: '0.6rem' };
+export const ModalContentStyle = { height: '50vh', display: 'flex', flexDirection: 'column', gap: '0.6rem' };

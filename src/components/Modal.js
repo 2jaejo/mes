@@ -12,6 +12,7 @@ const Modal = forwardRef(( _, ref) => {
       // 옵션 업데이트
       setModalOptions((prevOptions) => ({ 
         title:"알림",
+        closeBtn: true,
         message:"",
         fields:[],
         content: <div></div>,
@@ -43,10 +44,22 @@ const Modal = forwardRef(( _, ref) => {
   return (
     <div className={styles.fullscreenCenter}>
       <div className={styles.modal}>
-        {/* title */}
-        {modalOptions.title && (
-          <h4 style={{ fontWeight: "bold" }}>{modalOptions.title}</h4>
-        )}
+        <div className="mb-2 d-flex justify-content-between">
+          {/* title */}
+          {modalOptions.title && (
+            <h4 style={{ fontWeight: "bold", marginBottom: 0 }}>{modalOptions.title}</h4>
+          )}
+
+          {/* closeBtn */}
+          {modalOptions.closeBtn && (
+            <button
+              onClick={onCancle}
+              className="btn btn-sm btn-outline-secondary"
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          )}
+        </div>
 
         {/* message */}
         {modalOptions.message && (

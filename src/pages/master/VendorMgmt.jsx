@@ -11,21 +11,87 @@ const Main = () => {
   const modalRef2 = useRef();  
   
   const [loading, setLoading] = useState(false);
+
+
+  // selectbox
+  const selectBox = useRef({}); 
+
   
-  // 거래처유형
-  const [optClientType, setOptClientType] = useState(null);
-  const optClientTypeRef = useRef([]);  
+
+  // grid cell code_name 변환
+  const commonTypeFormatter = (params, cd) => {
+    const arr_client_type = selectBox.current.common?.[cd] || [];
+    const item = arr_client_type.find(el => el.code === params.value);
+    return item ? item.code_name : params.value; 
+  };
+  
+  // 그리드 설정
+  const gridRef = useRef();  
+  const [rowData, setRowData] = useState();
+  const [columnDefs, setColumnDefs] = useState([]);
 
 
   useEffect(()=>{
     console.log("useEffect");
 
-    
+    const init = {
+      category: '',
+      code: ['cd001', 'cd010']
+    };
+
     axiosInstance
-    .post(`/api/getCodeDet`, JSON.stringify({group_code:'cd001'}))
+    .post(`/api/getDropDown`, JSON.stringify(init))
     .then((res) => {
-        setOptClientType(res.data);  
-        optClientTypeRef.current = res.data;
+
+        selectBox.current = res.data;
+
+        setColumnDefs([
+          { headerName: "거래처코드", field: "client_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
+          { headerName: "거래처명", field: "client_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
+          { headerName: "거래처유형", field: "client_type", sortable: true, editable: true, align:"center", 
+            cellEditor: "agSelectCellEditor",
+            cellEditorParams: {
+              values: selectBox.current.common?.['cd001'].map((item) => item.code) ?? [],
+            },
+            valueFormatter: (params) => commonTypeFormatter(params,'cd001'),
+          },
+          { headerName: "사업자등록번호", field: "business_no", sortable: true, editable: true, align:"center"},
+          { headerName: "업태", field: "business_type", sortable: true, editable: true, align:"left"},
+          { headerName: "업종", field: "business_item", sortable: true, editable: true, align:"left"},
+          { headerName: "대표자", field: "ceo_name", sortable: true, editable: true, align:"left"},
+          { headerName: "담당자", field: "contact_name", sortable: true, editable: true, align:"left"},
+          { headerName: "연락처", field: "contact_phone", sortable: true, editable: true, align:"center"},
+          { headerName: "팩스", field: "contact_fax", sortable: true, editable: true, align:"center"},
+          { headerName: "이메일", field: "contact_email", sortable: true, editable: true, align:"left"},
+          { 
+            headerName: "사용여부", 
+            field: "use_yn", 
+            sortable: true, 
+            editable: false,
+            backgroundColor: "#a7d1ff29",
+            align:"center",
+            cellRenderer: 'agCheckboxCellRenderer',
+            cellRendererParams: {
+              disabled: false,
+            },
+             // Y/N 값을 true/false로 변환하여 체크박스 표시
+            valueGetter: (params) => {
+              return params.data.use_yn === 'Y';
+            },
+      
+            // 체크박스 변경 시 true/false → Y/N 으로 반영
+            valueSetter: (params) => {
+              const newValue = params.newValue ? 'Y' : 'N';
+              if (params.data.use_yn !== newValue) {
+                params.data.use_yn = newValue;
+                return true; // 값이 바뀐 경우만 true
+              }
+              return false; // 변경 없음
+            },
+          },
+          { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
+        ]);
+
         getData();
       })
       .catch((error) => {
@@ -37,57 +103,7 @@ const Main = () => {
   },[]);
 
 
-  // 그리드 레퍼
-  const gridRef = useRef();  
-
-  const typeFormatter = (params) => {
-    const item = optClientTypeRef.current.find(el => el.code === params.value);
-    // 못 찾으면 원래 코드 출력
-    return item ? item.code_name : params.value; 
-  };
-
-  // 그리드 설정
-  const [rowData, setRowData] = useState();
-  const [columnDefs] = useState([
-    { headerName: "거래처코드", field: "client_code", sortable: false, editable: false, filter: "agTextColumnFilter", align:"center" },
-    { headerName: "거래처명", field: "client_name", sortable: true, editable: true, filter: "agTextColumnFilter",  align:"left"},
-    { headerName: "거래처유형", field: "client_type", sortable: true, editable: true, align:"center", valueFormatter: typeFormatter},
-    { headerName: "사업자등록번호", field: "business_no", sortable: true, editable: true, align:"center"},
-    { headerName: "업태", field: "business_type", sortable: true, editable: true, align:"center"},
-    { headerName: "업종", field: "business_item", sortable: true, editable: true, align:"center"},
-    { headerName: "대표자", field: "ceo_name", sortable: true, editable: true, align:"left"},
-    { headerName: "담당자", field: "contact_name", sortable: true, editable: true, align:"left"},
-    { headerName: "연락처", field: "contact_phone", sortable: true, editable: true, align:"center"},
-    { headerName: "팩스", field: "contact_fax", sortable: true, editable: true, align:"center"},
-    { headerName: "이메일", field: "contact_email", sortable: true, editable: true, align:"center"},
-    { 
-      headerName: "사용여부", 
-      field: "use_yn", 
-      sortable: true, 
-      editable: false,
-      backgroundColor: "#a7d1ff29",
-      align:"center",
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellRendererParams: {
-        disabled: false,
-      },
-       // Y/N 값을 true/false로 변환하여 체크박스 표시
-      valueGetter: (params) => {
-        return params.data.use_yn === 'Y';
-      },
-
-      // 체크박스 변경 시 true/false → Y/N 으로 반영
-      valueSetter: (params) => {
-        const newValue = params.newValue ? 'Y' : 'N';
-        if (params.data.use_yn !== newValue) {
-          params.data.use_yn = newValue;
-          return true; // 값이 바뀐 경우만 true
-        }
-        return false; // 변경 없음
-      },
-    },
-    { headerName: "비고", field: "comment", sortable: true, editable: true, align:"left", minWidth:300},
-  ]);
+  
 
 
   // 검색창 입력필드
@@ -179,10 +195,12 @@ const Main = () => {
                   size="sm"
                   className="w-100"
                 >
-                  {(optClientType || []).map((opt) => (
-                    <option key={opt.code} value={opt.code}>
-                      {opt.code_name}
-                    </option>
+                  {(selectBox.current.common?.['cd001'] || [])
+                    .filter(opt => opt.use_yn === 'Y')
+                    .map(opt => (
+                      <option key={opt.code} value={opt.code}>
+                        {opt.code_name}
+                      </option>
                   ))}
                 </Form.Select>
               </td>
@@ -556,10 +574,12 @@ const Main = () => {
                         className="w-auto"
                       >
                         <option value="">전체</option>
-                        {(optClientType || []).map((opt) => (
-                          <option key={opt.code} value={opt.code}>
-                            {opt.code_name}
-                          </option>
+                        {(selectBox.current.common?.['cd001'] || [])
+                          .filter(opt => opt.use_yn === 'Y')
+                          .map(opt => (
+                            <option key={opt.code} value={opt.code}>
+                              {opt.code_name}
+                            </option>
                         ))}
                       </Form.Select>
                     </div>
@@ -576,8 +596,13 @@ const Main = () => {
                       className="w-auto"
                     >
                       <option value="">전체</option>
-                      <option value="y">사용</option>
-                      <option value="n">미사용</option>
+                      {(selectBox.current.common?.['cd010'] || [])
+                        .filter(opt => opt.use_yn === 'Y')
+                        .map(opt => (
+                          <option key={opt.code} value={opt.code}>
+                            {opt.code_name}
+                          </option>
+                      ))}
                     </Form.Select>
                   </td>
                   <td className="">

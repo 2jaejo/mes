@@ -263,7 +263,7 @@ li.expanded {
 }
 
 
-.tab .close-btn {
+.close-btn {
   margin-left: 10px;
   background: transparent;
   border: none;
@@ -272,7 +272,7 @@ li.expanded {
   color: #888;
 }
 
-.tab .close-btn:hover {
+.close-btn:hover {
   color: #ff6b6b;
 }
 
